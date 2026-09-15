@@ -1,0 +1,67 @@
+{
+ "source": "ADO app API, http://app.adoebike.cn:13110/",
+ "retrieved": "2026-09-15",
+ "target": "BLE/display module (OTA target 1, node 0xA5)",
+ "terminalType": "1590535223578619906",
+ "version_record": {
+  "endpoint": "app/appterminalversion/getNewVersion/1590535223578619906?version=B02H_C_ADS_IOT02_BF_N09",
+  "id": "2021502632979517442",
+  "from_version": "B02H_C_ADS_IOT02_BF_N09",
+  "isUpgrade": 1
+ },
+ "package_endpoint": "app/appterminalversion/getHexPackage/2021502632979517442",
+ "file": "module_B02H_C_ADS_IOT02_BF_N11.bin",
+ "container": {
+  "magic": "B04H",
+  "package_version": "B02H_C_ADS_IOT02_BF_N11",
+  "sections": 3,
+  "total_size": 507904,
+  "package_crc32": "0x35CE0140"
+ },
+ "image": {
+  "size": 507904,
+  "sha256": "7c0f71b921c0af611bf861e373193629d0d8285b1626a56d38ffc587546e9325",
+  "md5": "d38c9c79e95430350a49ade816f88499",
+  "ota_chunks_128B": 3968,
+  "ota_verify_bytesum": "0x3070831",
+  "ota_verify_le32": "31080703"
+ },
+ "sections": [
+  {
+   "index": 0,
+   "id": "0x4211",
+   "name": "app_b02hc_f403a_bf_hmi_ads_iot02_crc",
+   "built": "2026-02-10 11:12:25",
+   "offset": "0x000180",
+   "length": 335752,
+   "crc32": "0x283125A8",
+   "crc32_verified": true,
+   "sha256": "39c7811711a543ef478b7f81861e0c95e234a8d7b3f3683d6c90b263644e86f0",
+   "file": "0_app_b02hc_f403a_bf_hmi_ads_iot02_crc.bin"
+  },
+  {
+   "index": 1,
+   "id": "0x4111",
+   "name": "B02H_BOOT_PUB_V07",
+   "built": "2026-02-10 11:10:20",
+   "offset": "0x052110",
+   "length": 20184,
+   "crc32": "0x67C48D5D",
+   "crc32_verified": true,
+   "sha256": "05f2629fec51b60de9e1a51911b48f339d25ebb64b9e97570677c1f074829fd3",
+   "file": "1_B02H_BOOT_PUB_V07.bin"
+  },
+  {
+   "index": 2,
+   "id": "0x4202",
+   "name": "HY_B02H_BLE_ADS_V9_OTA",
+   "built": "2026-02-10 11:13:20",
+   "offset": "0x056FF0",
+   "length": 151568,
+   "crc32": "0x7B9C4C04",
+   "crc32_verified": true,
+   "sha256": "82b0cb9d31416abccc5f8ed6e6d163f0758d7ec6796d3dcc94b3c73e9292c8f5",
+   "file": "2_HY_B02H_BLE_ADS_V9_OTA.bin"
+  }
+ ]
+}

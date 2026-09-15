@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<!--
+  ADO e-bike BLE protocol verifier (Web Bluetooth)
+
+  Companion to ado-ble-protocol.md. Connects to an ADO bike, runs the documented
+  authentication handshake, issues read-only queries and checks every assertion in
+  the spec against what the bike actually sends back.
+
+  Web Bluetooth needs a secure context, so serve it rather than opening the file:
+      python3 -m http.server -d docs 8000
+      open http://localhost:8000/ado-protocol-test.html
+  Chrome or Edge only (Safari and Firefox do not implement Web Bluetooth).
+
+  READ-ONLY by default. The only writes are the auth response and query frames.
+  Settings writes, NFC card deletion and firmware upload are deliberately absent;
+  the navigation test is opt-in and transient.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADO e-bike BLE protocol verifier</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff; --fg: #1a1c1f; --muted: #6b7280; --line: #e3e6ea;
+    --panel: #f7f8fa; --accent: #2d6fd4;
+    --pass: #17803d; --fail: #c02626; --warn: #9a6400; --skip: #8b919a;
+    --passbg: #e8f6ec; --failbg: #fdeaea; --warnbg: #fdf5e3; --skipbg: #f0f1f3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c; --fg: #e6e8ea; --muted: #9aa1ab; --line: #2b2f36;
+      --panel: #1d2025; --accent: #6fa3ec;
+      --pass: #4ec97d; --fail: #ff7a7a; --warn: #e5bc5c; --skip: #8b919a;
+      --passbg: #17291d; --failbg: #2d1a1a; --warnbg: #2b2415; --skipbg: #212429;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; padding: 24px 20px 64px; max-width: 1000px;
+    background: var(--bg); color: var(--fg);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  h1 { font-size: 21px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 28px 0 10px; letter-spacing: .01em; }
+  p { margin: 8px 0; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  .note { border-left: 3px solid var(--accent); }
+  .note.danger { border-left-color: var(--fail); }
+  button {
+    font: inherit; padding: 8px 15px; margin: 0 8px 8px 0; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--panel); color: var(--fg);
+  }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  #status { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 6px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  td.k { width: 232px; }
+  .tag {
+    display: inline-block; min-width: 58px; text-align: center; padding: 1px 8px;
+    border-radius: 4px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em;
+  }
+  .PASS { color: var(--pass); background: var(--passbg); }
+  .FAIL { color: var(--fail); background: var(--failbg); }
+  .WARN { color: var(--warn); background: var(--warnbg); }
+  .SKIP, .WAIT { color: var(--skip); background: var(--skipbg); }
+  #log {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-all;
+    max-height: 420px; overflow-y: auto; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 8px; padding: 12px;
+  }
+  .tx { color: var(--accent); } .rx { color: var(--pass); }
+  .err { color: var(--fail); } .dim { color: var(--muted); }
+  details { margin-top: 10px; } summary { cursor: pointer; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>ADO e-bike BLE protocol verifier</h1>
+<div class="sub">
+  Checks <code>ado-ble-protocol.md</code> against a real bike over Web Bluetooth.
+  Chrome or Edge, served from <code>localhost</code> or HTTPS.
+</div>
+
+<div class="panel note">
+  <strong>Read-only.</strong> This page writes only the authentication response and read
+  queries. It never writes settings, deletes NFC cards or touches firmware. The one
+  state-changing test — pushing a navigation turn to the display — is opt-in below and
+  wears off on its own.
+</div>
+
+<h2>1 &middot; Offline self-test</h2>
+<p class="sub" style="margin:0 0 10px">
+  Validates this page's own codec against the vectors in the spec. Run it before connecting —
+  if it fails, the page is broken, not the bike.
+</p>
+<button id="btnSelf" class="primary">Run self-test</button>
+<table id="selfTable"><tbody></tbody></table>
+
+<h2>2 &middot; Connect and verify</h2>
+<button id="btnConnect" class="primary">Connect to bike</button>
+<button id="btnConnectAny">Connect (show all devices)</button>
+<button id="btnDisconnect" disabled>Disconnect</button>
+<p id="status">Not connected.</p>
+<table id="checkTable"><thead><tr><th>Check</th><th style="width:78px">Result</th><th>Detail</th></tr></thead><tbody></tbody></table>
+
+<h2>3 &middot; Decoded telemetry</h2>
+<table id="telemTable"><tbody><tr><td class="dim">Waiting for status frames…</td></tr></tbody></table>
+
+<h2>4 &middot; Optional write test</h2>
+<div class="panel note danger" style="margin-bottom:10px">
+  Sends a navigation start, one turn arrow ("turn left, 120 m"), then a navigation end.
+  It changes what the display shows for a few seconds. Nothing is stored.
+</div>
+<button id="btnNav" disabled>Run navigation test</button>
+
+<h2>5 &middot; Frame log</h2>
+<button id="btnCopy">Copy log</button>
+<button id="btnDownload">Download JSON</button>
+<button id="btnClear">Clear</button>
+<div id="log"></div>
+
+<script>
+"use strict";
+
+/* ------------------------------------------------------------------ *
+ * Protocol constants — see ado-ble-protocol.md §1, §3, §5, §13
+ * ------------------------------------------------------------------ */
+
+const SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const WRITE_UUID   = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";  // app -> bike
+const NOTIFY_UUID  = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";  // bike -> app
+
+const ADDR_APP = 0x11, ADDR_MODULE = 0x10, ADDR_NAV = 0xF1, ADDR_ADS = 0xF2, ADDR_CAN = 0xF3;
+
+const AUTH_KEY_HEX   = "32435444553430714e794367546a6231";      // ASCII "2CTDU40qNyCgTjb1"
+const IDENTIFICATION = "55aa011110010004d8ff";                  // §5, sent verbatim
+
+// interfaceNo values straight out of the vendor table (ado-opcode-table.json).
+// `extra` is what the app appends before the checksum.
+const QUERIES = [
+  { code: "code",        no: "0111a5011818", extra: "",     label: "module version" },
+  { code: "newcode",     no: "0111f1010101", extra: "",     label: "protocol version / capability" },
+  { code: "langlist",    no: "0111f1010401", extra: "",     label: "language list" },
+  { code: "contorlCode", no: "0111a3010030", extra: "",     label: "controller version" },
+  { code: "zpower",      no: "0111a4010030", extra: "",     label: "main battery version" },
+  { code: "fpowercode",  no: "0111b4010030", extra: "",     label: "secondary battery version" },
+  { code: "zlms",        no: "0111f201",     extra: "010d", label: "ADS settings, regs 0x01-0x0D" },
+  { code: "candsone",    no: "0111f3010035", extra: "",     label: "CAN settings, regs 0x00-0x34" },
+  { code: "caninfo",     no: "0111f3013005", extra: "",     label: "CAN settings, regs 0x30-0x34" },
+  { code: "NFC",         no: "0111a9010060", extra: "",     label: "NFC card list" },
+];
+
+/* ------------------------------------------------------------------ *
+ * Codec — mirrors docs/ado_protocol.py
+ * ------------------------------------------------------------------ */
+
+const hex   = b => Array.from(b, x => x.toString(16).padStart(2, "0")).join("");
+const unhex = s => new Uint8Array((s.replace(/[^0-9a-fA-F]/g, "").match(/../g) || []).map(x => parseInt(x, 16)));
+
+// §2 — 16-bit one's complement of the byte sum, little-endian
+function checksum(payload) {
+  let sum = 0;
+  for (const b of payload) sum += b;
+  const v = (~sum) & 0xffff;
+  return new Uint8Array([v & 0xff, (v >> 8) & 0xff]);
+}
+
+// §2 — 55 AA | LEN | SRC | DST | CMD | SUB | DATA[LEN] | CRC16
+function buildFrame(dst, cmd, sub, data = new Uint8Array(0), src = ADDR_APP) {
+  if (data.length > 0xff) throw new Error("DATA must be <= 255 bytes");
+  const payload = new Uint8Array(5 + data.length);
+  payload.set([data.length, src, dst, cmd, sub], 0);
+  payload.set(data, 5);
+  const crc = checksum(payload);
+  const out = new Uint8Array(2 + payload.length + 2);
+  out.set([0x55, 0xaa], 0); out.set(payload, 2); out.set(crc, 2 + payload.length);
+  return out;
+}
+
+// Build straight from a vendor interfaceNo, exactly as the app does:
+// "55AA" + interfaceNo + extra + checkSum(interfaceNo + extra)
+function frameFromInterfaceNo(noHex, extraHex = "") {
+  const payload = unhex(noHex + extraHex);
+  const crc = checksum(payload);
+  const out = new Uint8Array(2 + payload.length + 2);
+  out.set([0x55, 0xaa], 0); out.set(payload, 2); out.set(crc, 2 + payload.length);
+  return out;
+}
+
+function parseFrame(f) {
+  if (f.length < 9 || f[0] !== 0x55 || f[1] !== 0xaa) return { ok: false, reason: "bad magic" };
+  const len = f[2];
+  if (f.length < 9 + len) return { ok: false, reason: "truncated", len, have: f.length, need: 9 + len };
+  const data = f.slice(7, 7 + len);
+  const gotCrc  = f.slice(7 + len, 9 + len);
+  const wantCrc = checksum(f.slice(2, 7 + len));
+  return {
+    ok: true, len, src: f[3], dst: f[4], cmd: f[5], sub: f[6], data,
+    crcOk: hex(gotCrc) === hex(wantCrc), gotCrc: hex(gotCrc), wantCrc: hex(wantCrc),
+    extra: f.length - (9 + len),
+  };
+}
+
+// §5 — AES-128-ECB, no padding, one block.
+// WebCrypto has no ECB, but CBC with a zero IV gives C1 = E(P1 XOR 0) = E(P1),
+// so the first 16 bytes of an AES-CBC encryption are the ECB block.
+async function authResponseBlock(challenge) {
+  const block = new Uint8Array(16);
+  block.set(challenge.slice(0, 16), 0);              // zero-pad right / truncate
+  const key = await crypto.subtle.importKey("raw", unhex(AUTH_KEY_HEX), "AES-CBC", false, ["encrypt"]);
+  const ct  = await crypto.subtle.encrypt({ name: "AES-CBC", iv: new Uint8Array(16) }, key, block);
+  return new Uint8Array(ct).slice(0, 16);
+}
+
+const leInt = b => b.reduce((a, x, i) => a + x * 2 ** (8 * i), 0);
+const battery = b => ({ percentage: b & 0x7f, online: !!(b >> 7) });
+const ascii = b => { let s = ""; for (const c of b) { if (c === 0) break; s += String.fromCharCode(c); } return s; };
+
+// §7 — group SUB=0x01
+function decodeLiveStatus(d) {
+  return {
+    "Fault code":          d[0] === 0 ? "0 (healthy)" : d[0] + " ⚠",
+    "Speed":               (leInt(d.slice(9, 11)) / 10).toFixed(1) + " km/h",
+    "Main battery":        battery(d[7]).percentage + "% " + (battery(d[7]).online ? "(online)" : "(offline)"),
+    "Secondary battery":   battery(d[1]).percentage + "% " + (battery(d[1]).online ? "(online)" : "(offline)"),
+    "Active battery":      (d[2] >> 2) & 3,
+    "Headlight":           d[4] ? "on" : "off",
+    "Assist level":        d[5] + " of " + d[6],
+    "Working mode":        d[8],
+    "Trip distance":       (leInt(d.slice(11, 15)) / 100).toFixed(2) + " km",
+    "Odometer":            (leInt(d.slice(15, 19)) / 100).toFixed(2) + " km",
+    "Calories":            leInt(d.slice(19, 21)),
+  };
+}
+
+// §7 — group SUB=0x09
+function decodeTripStats(d) {
+  return {
+    "Ride duration":       leInt(d.slice(0, 4)) + " s",
+    "Average speed":       (leInt(d.slice(4, 6)) / 100).toFixed(2),
+    "Maximum speed":       (leInt(d.slice(6, 8)) / 10).toFixed(1),
+    "Backlight":           (d[12] & 0x0f) + " of " + (d[12] >> 4),
+    "Display unit":        d[13] ? "miles" : "km",
+    "Total ride time":     leInt(d.slice(16, 20)) + " s",
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * UI plumbing
+ * ------------------------------------------------------------------ */
+
+const $ = id => document.getElementById(id);
+const logRows = [];
+
+function logLine(cls, text) {
+  const t = new Date().toISOString().substr(11, 12);
+  logRows.push({ t, cls, text });
+  const el = document.createElement("div");
+  el.className = cls;
+  el.textContent = `${t}  ${text}`;
+  $("log").appendChild(el);
+  $("log").scrollTop = $("log").scrollHeight;
+}
+const setStatus = s => { $("status").textContent = s; };
+
+const CHECKS = [
+  ["ble.available",  "Web Bluetooth available"],
+  ["gatt.connect",   "GATT connected"],
+  ["gatt.service",   "Nordic UART service found"],
+  ["gatt.chars",     "Write + notify characteristics"],
+  ["gatt.notify",    "Notifications subscribed"],
+  ["frame.magic",    "All frames start 55 AA"],
+  ["frame.len",      "LEN matches frame size"],
+  ["frame.crc",      "All frame checksums valid"],
+  ["frame.dst",      "Replies addressed to 0x11"],
+  ["auth.challenge", "Auth challenge received"],
+  ["auth.success",   "Auth accepted (CMD 0x20)"],
+  ["telem.live",     "Live status group (SUB 0x01)"],
+  ["telem.trip",     "Trip stats group (SUB 0x09)"],
+  ["telem.plausible","Decoded values in range"],
+  ["ver.module",     "Module version string"],
+  ["ver.protocol",   "Capability reply (CMD 04 / SUB 01)"],
+  ["ver.controller", "Controller version"],
+  ["ver.battery",    "Battery version(s)"],
+  ["telem.cmd",      "Status frames use CMD 0x06"],
+  ["settings.reply", "Settings reply (0xF2 ADS or 0xF3 CAN)"],
+  ["settings.block", "Register block identified"],
+  ["nav.write",      "Navigation frames accepted"],
+];
+
+const results = {};
+function initChecks() {
+  const tb = $("checkTable").querySelector("tbody");
+  tb.innerHTML = "";
+  for (const [key, label] of CHECKS) {
+    results[key] = { state: "WAIT", detail: "" };
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="k">${label}</td><td><span class="tag WAIT" id="st-${key}">WAIT</span></td><td class="mono dim" id="dt-${key}"></td>`;
+    tb.appendChild(tr);
+  }
+}
+function mark(key, state, detail = "") {
+  // never downgrade a FAIL back to PASS
+  if (results[key] && results[key].state === "FAIL" && state === "PASS") return;
+  results[key] = { state, detail };
+  const s = $("st-" + key), d = $("dt-" + key);
+  if (s) { s.className = "tag " + state; s.textContent = state; }
+  if (d) { d.textContent = detail; d.className = "mono " + (state === "FAIL" ? "err" : "dim"); }
+}
+
+function renderTelemetry(title, obj) {
+  const tb = $("telemTable").querySelector("tbody");
+  const id = "telem-" + title.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase();
+  let section = document.getElementById(id);
+  if (!section) {
+    if (tb.querySelector(".dim")) tb.innerHTML = "";
+    section = document.createElement("tbody");
+    section.id = id;
+    $("telemTable").appendChild(section);
+  }
+  const rows = Object.entries(obj)
+    .map(([k, v]) => `<tr><td class="k">${k}</td><td class="mono">${v}</td></tr>`).join("");
+  section.innerHTML = `<tr><th colspan="2">${title}</th></tr>` + rows;
+}
+
+/* ------------------------------------------------------------------ *
+ * Offline self-test — vectors from the spec
+ * ------------------------------------------------------------------ */
+
+async function selfTest() {
+  const tb = $("selfTable").querySelector("tbody");
+  tb.innerHTML = "";
+  const row = (name, pass, got) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="k">${name}</td>` +
+      `<td style="width:78px"><span class="tag ${pass ? "PASS" : "FAIL"}">${pass ? "PASS" : "FAIL"}</span></td>` +
+      `<td class="mono dim">${got}</td>`;
+    tb.appendChild(tr);
+    return pass;
+  };
+
+  let all = true;
+  // §2 checksum vectors
+  all &= row("checksum 011110010004", hex(checksum(unhex("011110010004"))) === "d8ff", hex(checksum(unhex("011110010004"))));
+  all &= row("checksum 0611A70300…", hex(checksum(unhex("0611a70300112233445566"))) === "d9fd", hex(checksum(unhex("0611a70300112233445566"))));
+  all &= row("checksum 0111F1010101", hex(checksum(unhex("0111f1010101"))) === "f9fe", hex(checksum(unhex("0111f1010101"))));
+  // §5 identification frame round-trips through the builder
+  const ident = frameFromInterfaceNo("011110010004");
+  all &= row("identification frame", hex(ident) === IDENTIFICATION, hex(ident));
+  // §2 builder reproduces vendor opcodes
+  const t1 = hex(buildFrame(0xa5, 0x03, 0xa6, unhex("01")).slice(2, 7));
+  all &= row("build → openlight header", t1 === "0111a503a6", t1);
+  const t2 = hex(buildFrame(ADDR_NAV, 0x03, 0x00, new Uint8Array(18)).slice(2, 7));
+  all &= row("build → newadress header", t2 === "1211f10300", t2);
+  const t3 = hex(buildFrame(ADDR_MODULE, 0x02, 0x46, new Uint8Array(4)).slice(2, 7));
+  all &= row("build → timeSend header", t3 === "0411100246", t3);
+  // §10 turn record
+  const tr4 = hex(turnRecord(0x07, 250));
+  all &= row("turn record (0x07, 250 m)", tr4 === "fa000007", tr4);
+  // §5 AES via the CBC zero-IV trick
+  const blk = await authResponseBlock(unhex("00112233445566778899aabbccddeeff"));
+  all &= row("AES-128-ECB auth response", hex(blk) === "67d228ce5f51bb500fe42c9a436d2ee8", hex(blk));
+  // §2 parse round-trip
+  const p = parseFrame(buildFrame(ADDR_NAV, 0x03, 0x00, new Uint8Array(18)));
+  all &= row("parse round-trip", p.ok && p.crcOk && p.len === 18, `len=${p.len} crcOk=${p.crcOk}`);
+
+  logLine(all ? "rx" : "err", `self-test ${all ? "passed" : "FAILED"}`);
+  return !!all;
+}
+
+function turnRecord(icon, metres) {
+  const v = ((icon & 0xff) * 2 ** 24) + (Math.round(metres) & 0xffffff);
+  return new Uint8Array([v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff, (v >>> 24) & 0xff]);
+}
+
+/* ------------------------------------------------------------------ *
+ * Connection and verification
+ * ------------------------------------------------------------------ */
+
+let device = null, writeChar = null, notifyChar = null, writeMode = "response";
+let rxBuf = new Uint8Array(0);
+let authDone = false, sawReassembly = false;
+const blocksSeen = [];
+const seenSrc = new Set();
+
+async function connect(showAll) {
+  try {
+    if (!navigator.bluetooth) {
+      mark("ble.available", "FAIL", "navigator.bluetooth missing — use Chrome/Edge over https or localhost");
+      return;
+    }
+    mark("ble.available", "PASS", "");
+    initChecksPreserveAvailable();
+
+    setStatus("Requesting device…");
+    // The app matches any name *containing* "ado"; Web Bluetooth only offers
+    // namePrefix, so we try the common casings and fall back to showing everything.
+    const opts = showAll
+      ? { acceptAllDevices: true, optionalServices: [SERVICE_UUID] }
+      : { filters: [{ namePrefix: "ADO" }, { namePrefix: "ado" }, { namePrefix: "Ado" }],
+          optionalServices: [SERVICE_UUID] };
+    device = await navigator.bluetooth.requestDevice(opts);
+    logLine("dim", `device: ${device.name || "(unnamed)"}  id=${device.id}`);
+    device.addEventListener("gattserverdisconnected", onDisconnected);
+
+    setStatus("Connecting…");
+    const server = await device.gatt.connect();
+    mark("gatt.connect", "PASS", device.name || "");
+    $("btnDisconnect").disabled = false;
+
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    mark("gatt.service", "PASS", SERVICE_UUID);
+
+    const chars = await service.getCharacteristics();
+    logLine("dim", "characteristics: " + chars.map(c =>
+      c.uuid.slice(0, 8) + " [" + Object.entries({
+        read: c.properties.read, write: c.properties.write,
+        writeNoResp: c.properties.writeWithoutResponse,
+        notify: c.properties.notify, indicate: c.properties.indicate,
+      }).filter(([, v]) => v).map(([k]) => k).join(",") + "]").join("  "));
+
+    writeChar  = chars.find(c => c.uuid === WRITE_UUID)  ||
+                 chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
+    notifyChar = chars.find(c => c.uuid === NOTIFY_UUID) ||
+                 chars.find(c => c.properties.notify || c.properties.indicate);
+    if (!writeChar || !notifyChar) {
+      mark("gatt.chars", "FAIL", "could not resolve both characteristics");
+      return;
+    }
+    // The vendor profile names these two characteristics the other way round; see
+    // reverse-engineering.md. Resolve by GATT properties, not by name.
+    const rolesAsDocumented = writeChar.uuid === WRITE_UUID && notifyChar.uuid === NOTIFY_UUID;
+    writeMode = writeChar.properties.write ? "response" : "noResponse";
+    mark("gatt.chars", rolesAsDocumented ? "PASS" : "WARN",
+         `write=${writeChar.uuid.slice(0,8)} (${writeMode}), notify=${notifyChar.uuid.slice(0,8)}` +
+         (rolesAsDocumented ? "" : " — differs from spec"));
+
+    await notifyChar.startNotifications();
+    notifyChar.addEventListener("characteristicvaluechanged", onNotify);
+    mark("gatt.notify", "PASS", "");
+
+    // §5 — kick off the handshake. Everything else is driven by replies.
+    setStatus("Authenticating…");
+    await send(unhex(IDENTIFICATION), "identification");
+
+    setTimeout(() => {
+      if (!authDone) mark("auth.challenge", "FAIL", "no challenge within 5 s");
+    }, 5000);
+  } catch (e) {
+    logLine("err", "connect: " + e.message);
+    setStatus("Error: " + e.message);
+  }
+}
+
+function initChecksPreserveAvailable() {
+  const avail = results["ble.available"];
+  initChecks();
+  if (avail) mark("ble.available", avail.state, avail.detail);
+  rxBuf = new Uint8Array(0); authDone = false; sawReassembly = false; seenSrc.clear();
+  blocksSeen.length = 0;
+}
+
+async function send(bytes, label) {
+  logLine("tx", `TX  ${label.padEnd(26)} ${hex(bytes)}`);
+  if (writeMode === "response") await writeChar.writeValueWithResponse(bytes);
+  else await writeChar.writeValueWithoutResponse(bytes);
+}
+
+function onNotify(ev) {
+  const chunk = new Uint8Array(ev.target.value.buffer);
+  // One notification is meant to carry one whole frame (§1), which needs a raised MTU.
+  // Web Bluetooth
+  // gives no MTU control, so buffer defensively and report if it was ever needed.
+  const merged = new Uint8Array(rxBuf.length + chunk.length);
+  merged.set(rxBuf, 0); merged.set(chunk, rxBuf.length);
+  rxBuf = merged;
+
+  for (;;) {
+    const start = findMagic(rxBuf);
+    if (start < 0) { if (rxBuf.length > 1) rxBuf = rxBuf.slice(rxBuf.length - 1); break; }
+    if (start > 0) { logLine("dim", `(skipped ${start} leading byte(s))`); rxBuf = rxBuf.slice(start); }
+    if (rxBuf.length < 3) break;
+    const need = 9 + rxBuf[2];
+    if (rxBuf.length < need) {
+      if (chunk.length < need) { sawReassembly = true; }
+      break;                                        // wait for more
+    }
+    const frame = rxBuf.slice(0, need);
+    rxBuf = rxBuf.slice(need);
+    handleFrame(frame, chunk.length < need);
+  }
+}
+
+function findMagic(b) {
+  for (let i = 0; i + 1 < b.length; i++) if (b[i] === 0x55 && b[i + 1] === 0xaa) return i;
+  return -1;
+}
+
+function handleFrame(frame, wasReassembled) {
+  const p = parseFrame(frame);
+  logLine("rx", `RX  ${hex(frame)}${wasReassembled ? "   (reassembled)" : ""}`);
+  if (!p.ok) { mark("frame.magic", "FAIL", p.reason); return; }
+
+  mark("frame.magic", "PASS", "");
+  mark("frame.len", wasReassembled ? "WARN" : "PASS", wasReassembled
+      ? "LEN correct, but frames arrive split across notifications (ATT MTU too small)"
+      : "");
+  mark("frame.crc", p.crcOk ? "PASS" : "FAIL",
+       p.crcOk ? "" : `got ${p.gotCrc}, expected ${p.wantCrc}`);
+  mark("frame.dst", p.dst === ADDR_APP ? "PASS" : "FAIL", p.dst === ADDR_APP ? "" : `dst=0x${p.dst.toString(16)}`);
+
+  seenSrc.add(p.src);
+  logLine("dim", `    src=0x${p.src.toString(16).padStart(2,"0")} dst=0x${p.dst.toString(16).padStart(2,"0")} ` +
+                 `cmd=0x${p.cmd.toString(16).padStart(2,"0")} sub=0x${p.sub.toString(16).padStart(2,"0")} ` +
+                 `len=${p.len} data=${hex(p.data)}`);
+
+  dispatch(p).catch(e => logLine("err", "handler: " + e.message));
+}
+
+async function dispatch(p) {
+  /* ---- §5 authentication ---- */
+  if (!authDone && p.sub === 0x00 && p.cmd !== 0x20) {
+    mark("auth.challenge", p.len >= 1 && p.len <= 16 ? "PASS" : "WARN",
+         `${p.len}-byte challenge from 0x${p.src.toString(16)}, zero-padded to one AES block`);
+    const block = await authResponseBlock(p.data);
+    await send(buildFrame(ADDR_MODULE, 0x20, 0x00, block), "ide (auth response)");
+    return;
+  }
+  if (p.cmd === 0x20 && p.sub === 0x00) {
+    if (authDone) return;
+    authDone = true;
+    mark("auth.success", "PASS", "fixed-key AES-128-ECB handshake accepted");
+    setStatus("Authenticated — running queries…");
+    $("btnNav").disabled = false;
+    await runQueries();
+    return;
+  }
+
+  /* ---- §7 status reports ---- */
+  if (p.sub === 0x01 && p.src === ADDR_MODULE && p.len >= 21) {
+    mark("telem.live", "PASS", `LEN=${p.len}, src=0x10, cmd=0x${p.cmd.toString(16)}`);
+    mark("telem.cmd", p.cmd === 0x06 ? "PASS" : "WARN",
+         p.cmd === 0x06 ? "status frames use CMD=0x06" : `CMD=0x${p.cmd.toString(16)}, spec says 0x06`);
+    const d = decodeLiveStatus(p.data);
+    renderTelemetry("Live status (SUB 0x01)", d);
+    const speed = leInt(p.data.slice(9, 11)) / 10;
+    const batt  = battery(p.data[7]).percentage;
+    const odo   = leInt(p.data.slice(15, 19)) / 100;
+    const bad = [];
+    if (speed > 80)          bad.push(`speed ${speed}`);
+    if (batt > 100)          bad.push(`battery ${batt}%`);
+    if (odo > 200000)        bad.push(`odometer ${odo} km`);
+    if (p.data[6] > 0 && p.data[5] > p.data[6]) bad.push(`assist ${p.data[5]}/${p.data[6]}`);
+    mark("telem.plausible", bad.length ? "FAIL" : "PASS",
+         bad.length ? "implausible: " + bad.join(", ") + " — offsets likely wrong" : "speed/battery/odometer/assist all sane");
+    return;
+  }
+  if (p.sub === 0x09 && p.len >= 20) {
+    mark("telem.trip", "PASS", `LEN=${p.len}`);
+    renderTelemetry("Trip statistics (SUB 0x09)", decodeTripStats(p.data));
+    return;
+  }
+
+  /* ---- §8 version, capability and language replies ---- */
+  if (p.cmd === 0x04 && p.sub === 0x18) {
+    const v = ascii(p.data);
+    mark("ver.module", /[\x20-\x7e]{3,}/.test(v) ? "PASS" : "FAIL", JSON.stringify(v));
+    logLine("dim", `    module version = ${v}`);
+    return;
+  }
+  if (p.cmd === 0x04 && p.sub === 0x01 && p.src === ADDR_NAV) {
+    const half = p.data;
+    mark("ver.protocol", p.len >= 6 ? "PASS" : "WARN",
+         `menu=0x${(half[0] & 0x0f).toString(16)} bitmap=0x${(half[4] ?? 0).toString(16)} nfc=${(half[5] ?? 0) & 0x0f}`);
+    return;
+  }
+  if (p.cmd === 0x04 && [0xa3, 0xa4, 0xb4].includes(p.src)) {
+    const mid = p.data.length >> 1;
+    const hw = ascii(p.data.slice(0, mid)), ver = ascii(p.data.slice(mid));
+    const which = p.src === 0xa3 ? "ver.controller" : "ver.battery";
+    const name  = p.src === 0xa3 ? "controller" : (p.src === 0xa4 ? "main battery" : "secondary battery");
+    mark(which, (hw || ver) ? "PASS" : "WARN", `${name}: hw=${JSON.stringify(hw)} ver=${JSON.stringify(ver)}`);
+    logLine("dim", `    ${name}: hardware=${hw} version=${ver}`);
+    return;
+  }
+
+  /* ---- §9 settings. Two controller families: ADS on 0xF2, Bafang/CAN on 0xF3.
+          A bike answers on one or the other, never both. ---- */
+  if (p.src === ADDR_ADS || p.src === ADDR_CAN) {
+    const fam = p.src === ADDR_ADS ? "ADS (0xF2)" : "CAN/Bafang (0xF3)";
+    if (p.cmd === 0x05) { logLine("dim", `    ${fam} write ack: ${p.data[0] === 0 ? "success" : "failure"}`); return; }
+    mark("settings.reply", "PASS", `${fam}, LEN=${p.len}, cmd=0x${p.cmd.toString(16)}`);
+
+    let verdict = "WARN", detail = `LEN=${p.len} matches no documented block`;
+    if (p.src === ADDR_ADS && p.len === 13) {
+      // zlms asks for 13 bytes from register 0x01, so this is block A by construction.
+      verdict = "PASS";
+      detail = "LEN=13 \u2192 block A, registers 0x01-0x0D, matching what the zlms request asks for. " +
+               "info.vue's D0E-D22 offsets belong to a read the app never issues.";
+      renderTelemetry("ADS settings \u2014 regs 0x01-0x0D", {
+        "D01 language":        p.data[0],
+        "D02 start password":  p.data[1],
+        "D0B assist level":    p.data[10],
+        "D0C zero-level en.":  p.data[11],
+        "D0D voltage display": p.data[12],
+      });
+    } else if (p.src === ADDR_ADS && p.len === 16) {
+      verdict = "PASS";
+      detail = "LEN=16 \u2192 block B, registers 0x0E-0x1D. Unexpected: zlms asks for 13 bytes.";
+      renderTelemetry("ADS settings \u2014 regs 0x0E-0x1D", {
+        "D0E battery voltage":   p.data[0],
+        "D0F wheel size":        (leInt(p.data.slice(1, 3)) / 10).toFixed(1) + " in",
+        "D11 speed magnets":     p.data[3],
+        "D12 speed limit":       p.data[4],
+        "D13 zero-speed start":  p.data[5],
+        "D14 drive mode":        p.data[6],
+        "D15 boost sensitivity": p.data[7],
+        "D16 boost start":       p.data[8],
+        "D17 magnet disc type":  p.data[9],
+        "D18 current limit":     p.data[10],
+        "D19 undervoltage":      (leInt(p.data.slice(11, 13)) / 10).toFixed(1) + " V",
+        "D20 cruise":            p.data[13],
+        "D21 speed ratio":       p.data[14],
+        "D22 protocol":          p.data[15],
+      });
+    } else if (p.src === ADDR_CAN && p.len > 0x34) {
+      // candsone asks for 0x35 bytes from register 0x00, so data[n] is register n
+      verdict = "PASS";
+      detail = `LEN=${p.len} \u2192 registers 0x00-0x${(p.len - 1).toString(16)}, data[n] = register n`;
+      renderTelemetry("CAN settings \u2014 regs 0x00 onwards", {
+        "D00 distance unit":     p.data[0] ? "miles" : "km",
+        "D01 auto-off time":     p.data[1],
+        "D02 light sensitivity": p.data[2],
+        "D03 backlight level":   p.data[3],
+        "D04 assist level":      p.data[4],
+        "D05 riding mode":       p.data[5],
+        "D06 language":          p.data[6],
+        "D07 distance":          p.data[7],
+        "D15 password enable":   p.data[8],
+        "D16 password":          hex(p.data.slice(9, 13)),
+        "D34 battery display":   p.data[0x34],
+      });
+    } else if (p.src === ADDR_CAN && p.len === 5) {
+      // caninfo asks for 5 bytes from register 0x30
+      verdict = "PASS";
+      detail = "LEN=5 \u2192 registers 0x30-0x34";
+      renderTelemetry("CAN settings \u2014 regs 0x30-0x34", {
+        "D30 wheel size":      (leInt(p.data.slice(0, 2)) / 10).toFixed(1) + " in",
+        "D32 speed limit":     (leInt(p.data.slice(2, 4)) / 10).toFixed(1),
+        "D34 battery display": p.data[4],
+      });
+    }
+    // A CAN bike answers both candsone and caninfo, so keep every block we identify
+    // rather than letting the last reply overwrite the detail.
+    blocksSeen.push(detail);
+    mark("settings.block", verdict, blocksSeen.join("  |  "));
+    logLine(verdict === "PASS" ? "rx" : "err", "    settings block: " + detail);
+    return;
+  }
+
+  /* ---- NFC card list ---- */
+  if (p.src === 0xa9 && p.cmd === 0x04) {
+    const n = p.data[0] & 0x0f;
+    logLine("dim", `    NFC: ${n} card(s) enrolled, LEN=${p.len}`);
+    return;
+  }
+}
+
+async function runQueries() {
+  for (const q of QUERIES) {
+    try {
+      await send(frameFromInterfaceNo(q.no, q.extra), `${q.code} (${q.label})`);
+      await sleep(600);                            // the bike is slow to answer
+    } catch (e) { logLine("err", `${q.code}: ${e.message}`); }
+  }
+  setStatus("Queries complete. Status frames should keep arriving.");
+  // Anything still WAIT after the sweep simply was not answered.
+  for (const [k] of CHECKS) {
+    if (results[k].state === "WAIT" && k !== "nav.write")
+      mark(k, "SKIP", "no matching reply received");
+  }
+  logLine("dim", `sources seen: ${[...seenSrc].map(s => "0x" + s.toString(16)).join(", ")}`);
+  if (sawReassembly) logLine("err",
+    "NOTE: frames arrived split across notifications. The app avoids this with setBLEMTU(512), " +
+    "which Web Bluetooth cannot do. Decoding still worked because of the reassembly buffer.");
+}
+
+async function navTest() {
+  $("btnNav").disabled = true;
+  try {
+    // §10 — start, one turn, then end
+    await send(buildFrame(ADDR_NAV, 0x03, 0x00, unhex("0101")), "startadress");
+    await sleep(500);
+    const data = new Uint8Array(18);
+    data[0] = 0x2a; data[1] = 0x02;                       // SEQ, format tag
+    data.set(turnRecord(0x02, 120), 2);                   // current: turn left, 120 m
+    data.set(turnRecord(0x01, 800), 6);                   // next: straight, 800 m
+    // slot 3 stays zero
+    data.set(new Uint8Array([0x18, 0x15, 0x00, 0x00]), 14); // remaining 5400 m
+    const f = buildFrame(ADDR_NAV, 0x03, 0x00, data);
+    if (f[2] !== 0x12) throw new Error(`LEN should be 0x12, got 0x${f[2].toString(16)}`);
+    await send(f, "newadress (turn left 120 m)");
+    await sleep(2500);
+    await send(buildFrame(ADDR_NAV, 0x03, 0x00, unhex("0003")), "endadress");
+    mark("nav.write", "PASS", "frames written without GATT error — check the display showed an arrow");
+    logLine("rx", "navigation test sent; the display should have shown a left arrow at 120 m");
+  } catch (e) {
+    mark("nav.write", "FAIL", e.message);
+    logLine("err", "nav test: " + e.message);
+  } finally {
+    $("btnNav").disabled = false;
+  }
+}
+
+function onDisconnected() {
+  setStatus("Disconnected.");
+  logLine("err", "GATT disconnected");
+  $("btnDisconnect").disabled = true;
+  $("btnNav").disabled = true;
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ------------------------------------------------------------------ *
+ * Wiring
+ * ------------------------------------------------------------------ */
+
+$("btnSelf").onclick       = selfTest;
+$("btnConnect").onclick    = () => connect(false);
+$("btnConnectAny").onclick = () => connect(true);
+$("btnNav").onclick        = navTest;
+$("btnDisconnect").onclick = () => { if (device?.gatt.connected) device.gatt.disconnect(); };
+$("btnClear").onclick      = () => { logRows.length = 0; $("log").innerHTML = ""; };
+$("btnCopy").onclick       = async () => {
+  await navigator.clipboard.writeText(logRows.map(r => `${r.t}  ${r.text}`).join("\n"));
+  setStatus("Log copied to clipboard.");
+};
+$("btnDownload").onclick = () => {
+  const out = {
+    page: "ado-protocol-test",
+    when: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    device: device ? { name: device.name, id: device.id } : null,
+    checks: Object.fromEntries(CHECKS.map(([k, label]) => [k, { label, ...results[k] }])),
+    log: logRows,
+  };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = "ado-protocol-test.json"; a.click();
+  URL.revokeObjectURL(url);
+};
+
+initChecks();
+if (!navigator.bluetooth) {
+  mark("ble.available", "FAIL", "navigator.bluetooth missing — needs Chrome/Edge over https or localhost");
+  setStatus("Web Bluetooth unavailable in this browser.");
+} else {
+  mark("ble.available", "PASS", "");
+  navigator.bluetooth.getAvailability?.().then(ok => {
+    if (!ok) mark("ble.available", "WARN", "adapter reported unavailable");
+  });
+}
+selfTest();
+</script>
+</body>
+</html>

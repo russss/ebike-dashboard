@@ -1,0 +1,1003 @@
+[
+ {
+  "children": [
+   {
+    "interfaceNo": "",
+    "interfaceName": "大灯状态",
+    "interfaceCode": "D40",
+    "fixCode": "heh",
+    "digit": "11"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "当前档位",
+    "interfaceCode": "D5",
+    "fixCode": "zz",
+    "digit": "12"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "总档位",
+    "interfaceCode": "D6",
+    "fixCode": "11",
+    "digit": "13"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "车辆电池电量",
+    "interfaceCode": "D7",
+    "fixCode": "zz",
+    "digit": "14"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "当前速度",
+    "interfaceCode": "D9",
+    "fixCode": "zz",
+    "digit": "16;17"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "单次里程",
+    "interfaceCode": "D11",
+    "fixCode": null,
+    "digit": "18;19;20;21"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "总里程",
+    "interfaceCode": "D15",
+    "fixCode": null,
+    "digit": "22;23;24;25"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "卡路里",
+    "interfaceCode": "D19",
+    "fixCode": null,
+    "digit": "26;27"
+   },
+   {
+    "interfaceNo": "D0",
+    "interfaceName": "故障码",
+    "interfaceCode": "D0",
+    "fixCode": null,
+    "digit": "7"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "工作模式",
+    "interfaceCode": "D08",
+    "fixCode": null,
+    "digit": "15"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "副电池",
+    "interfaceCode": "D1",
+    "fixCode": null,
+    "digit": "8"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "放电状态",
+    "interfaceCode": "D2",
+    "fixCode": null,
+    "digit": "9"
+   }
+  ],
+  "interfaceNo": "JIE-KOU-001",
+  "interfaceName": "数据上报表",
+  "interfaceCode": "01",
+  "fixCode": "HEADER-TYPE",
+  "digit": "6"
+ },
+ {
+  "children": [
+   {
+    "interfaceNo": "500",
+    "interfaceName": "骑行时间",
+    "interfaceCode": "D0",
+    "fixCode": "header",
+    "digit": "7;8;9;10"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "平均速度",
+    "interfaceCode": "D4",
+    "fixCode": "header",
+    "digit": "11;12"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "单位",
+    "interfaceCode": "D13",
+    "fixCode": "header",
+    "digit": "20"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "最大速度",
+    "interfaceCode": "D6",
+    "fixCode": null,
+    "digit": "13;14"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "背光等级",
+    "interfaceCode": "D12",
+    "fixCode": null,
+    "digit": "19"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "总骑行时间",
+    "interfaceCode": "D16",
+    "fixCode": null,
+    "digit": "23;24;25;26"
+   }
+  ],
+  "interfaceNo": "200",
+  "interfaceName": "里程数据",
+  "interfaceCode": "09",
+  "fixCode": "固定接口",
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A503A601",
+  "interfaceName": "开灯",
+  "interfaceCode": "openlight",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A503A600",
+  "interfaceName": "关灯",
+  "interfaceCode": "closelight",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "55AA011110010004D8FF",
+  "interfaceName": "认证",
+  "interfaceCode": "identification",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A503E000",
+  "interfaceName": "切换单位km",
+  "interfaceCode": "unitkm",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A503E001",
+  "interfaceName": "切换单位",
+  "interfaceCode": "unitmile",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "",
+  "interfaceName": "a",
+  "interfaceCode": "00",
+  "fixCode": "固定接口",
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "",
+  "interfaceName": "b",
+  "interfaceCode": "20",
+  "fixCode": "固定接口",
+  "digit": "5"
+ },
+ {
+  "interfaceNo": "1011102000",
+  "interfaceName": "认证2",
+  "interfaceCode": "ide",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0411",
+  "interfaceName": "升级起始帧",
+  "interfaceCode": "start",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "8011",
+  "interfaceName": "升级包",
+  "interfaceCode": "upload",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0411",
+  "interfaceName": "升级校验",
+  "interfaceCode": "check",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0011",
+  "interfaceName": "升级复位",
+  "interfaceCode": "reset",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "children": [
+   {
+    "interfaceNo": "",
+    "interfaceName": "成功",
+    "interfaceCode": "00",
+    "fixCode": null,
+    "digit": "7"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "失败",
+    "interfaceCode": "01",
+    "fixCode": null,
+    "digit": "7"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "不可升级",
+    "interfaceCode": "04",
+    "fixCode": null,
+    "digit": "7"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "校验失败",
+    "interfaceCode": "08",
+    "fixCode": null,
+    "digit": "7"
+   }
+  ],
+  "interfaceNo": "0",
+  "interfaceName": "升级应答",
+  "interfaceCode": "0B",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A5011818",
+  "interfaceName": "设备版本",
+  "interfaceCode": "code",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0211F103000101",
+  "interfaceName": "开始导航",
+  "interfaceCode": "startadress",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0211F103000003",
+  "interfaceName": "结束导航",
+  "interfaceCode": "endadress",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "children": [
+   {
+    "interfaceNo": "turn straight",
+    "interfaceName": "前进",
+    "interfaceCode": "01",
+    "fixCode": null,
+    "digit": "6"
+   },
+   {
+    "interfaceNo": "turn left",
+    "interfaceName": "左",
+    "interfaceCode": "02",
+    "fixCode": null,
+    "digit": "6"
+   },
+   {
+    "interfaceNo": "turn right",
+    "interfaceName": "右",
+    "interfaceCode": "03",
+    "fixCode": null,
+    "digit": "6"
+   },
+   {
+    "interfaceNo": "turn slight left",
+    "interfaceName": "左前",
+    "interfaceCode": "04",
+    "fixCode": null,
+    "digit": "6"
+   },
+   {
+    "interfaceNo": "turn slight right",
+    "interfaceName": "右前",
+    "interfaceCode": "05",
+    "fixCode": null,
+    "digit": "6"
+   },
+   {
+    "interfaceNo": "turn sharp left",
+    "interfaceName": "左后",
+    "interfaceCode": "06",
+    "fixCode": null,
+    "digit": "6"
+   },
+   {
+    "interfaceNo": "turn sharp right",
+    "interfaceName": "右后",
+    "interfaceCode": "07",
+    "fixCode": null,
+    "digit": "6"
+   },
+   {
+    "interfaceNo": "turn uturn",
+    "interfaceName": "左转掉头",
+    "interfaceCode": "08",
+    "fixCode": null,
+    "digit": "6"
+   }
+  ],
+  "interfaceNo": "1211F10300",
+  "interfaceName": "导航内容",
+  "interfaceCode": "adressing",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A503A7",
+  "interfaceName": "背光设置",
+  "interfaceCode": "setAsix",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F201",
+  "interfaceName": "获取ADS内容",
+  "interfaceCode": "zlms",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "children": [
+   {
+    "interfaceNo": "0b",
+    "interfaceName": "助力档位",
+    "interfaceCode": "D0B",
+    "fixCode": null,
+    "digit": "17"
+   },
+   {
+    "interfaceNo": "0c",
+    "interfaceName": "0档使能",
+    "interfaceCode": "D0C",
+    "fixCode": null,
+    "digit": "18"
+   },
+   {
+    "interfaceNo": "0d",
+    "interfaceName": "电压显示",
+    "interfaceCode": "D0D",
+    "fixCode": null,
+    "digit": "19"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "开机密码",
+    "interfaceCode": "D02",
+    "fixCode": null,
+    "digit": "8"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "电池电压",
+    "interfaceCode": "D0E",
+    "fixCode": null,
+    "digit": "7"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "轮径",
+    "interfaceCode": "D0F",
+    "fixCode": null,
+    "digit": "8;9"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "测速磁钢",
+    "interfaceCode": "D11",
+    "fixCode": null,
+    "digit": "10"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "限制速度",
+    "interfaceCode": "D12",
+    "fixCode": null,
+    "digit": "11"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "零启动",
+    "interfaceCode": "D13",
+    "fixCode": null,
+    "digit": "12"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "驱动方式",
+    "interfaceCode": "D14",
+    "fixCode": null,
+    "digit": "13"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "助力灵敏度",
+    "interfaceCode": "D15",
+    "fixCode": null,
+    "digit": "14"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "助力启动强度",
+    "interfaceCode": "D16",
+    "fixCode": null,
+    "digit": "15"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "助力磁钢盘类型",
+    "interfaceCode": "D17",
+    "fixCode": null,
+    "digit": "16"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "控制器限流",
+    "interfaceCode": "D18",
+    "fixCode": null,
+    "digit": "17"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "控制器欠压值",
+    "interfaceCode": "D19",
+    "fixCode": null,
+    "digit": "18;19"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "自动巡航",
+    "interfaceCode": "D20",
+    "fixCode": null,
+    "digit": "20"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "显示速度比",
+    "interfaceCode": "D21",
+    "fixCode": null,
+    "digit": "21"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "协议",
+    "interfaceCode": "D22",
+    "fixCode": null,
+    "digit": "22"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "语言",
+    "interfaceCode": "D01",
+    "fixCode": null,
+    "digit": "7"
+   }
+  ],
+  "interfaceNo": "",
+  "interfaceName": "ADS",
+  "interfaceCode": "F2",
+  "fixCode": null,
+  "digit": "3"
+ },
+ {
+  "interfaceNo": "0111F2020B",
+  "interfaceName": "助力档位设置",
+  "interfaceCode": "gear",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F2020C",
+  "interfaceName": "0档使能位设置",
+  "interfaceCode": "lingdangwei",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F2020D",
+  "interfaceName": "电压显示设置",
+  "interfaceCode": "dianya",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0911F20202",
+  "interfaceName": "开机密码开关",
+  "interfaceCode": "pwdopen",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F20300",
+  "interfaceName": "恢复出厂设置",
+  "interfaceCode": "restore",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F2020E",
+  "interfaceName": "电压选择",
+  "interfaceCode": "dyqhuan",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0211F2020F",
+  "interfaceName": "轮径",
+  "interfaceCode": "lunjing",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F20211",
+  "interfaceName": "测速磁钢",
+  "interfaceCode": "cscgang",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F20212",
+  "interfaceName": "限制速度",
+  "interfaceCode": "xzsd",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F20213",
+  "interfaceName": "零启动",
+  "interfaceCode": "lingqidong",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F20214",
+  "interfaceName": "驱动方式",
+  "interfaceCode": "qdfshi",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F20215",
+  "interfaceName": "助力灵敏度",
+  "interfaceCode": "zilimd",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F20216",
+  "interfaceName": "助力启动强度",
+  "interfaceCode": "zlqidongqd",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F20217",
+  "interfaceName": "助力磁钢盘类型",
+  "interfaceCode": "zlcgpanleix",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F20218",
+  "interfaceName": "控制器限流",
+  "interfaceCode": "kzqxianliu",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0211F20219",
+  "interfaceName": "控制器欠压值",
+  "interfaceCode": "kongzqqyz",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F2021B",
+  "interfaceName": "自动巡航",
+  "interfaceCode": "zdxunhang",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F2021E",
+  "interfaceName": "数据清零",
+  "interfaceCode": "sjqingling",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F1010101",
+  "interfaceName": "协议版本",
+  "interfaceCode": "newcode",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F3010035",
+  "interfaceName": "获取八方内容",
+  "interfaceCode": "candsone",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "children": [
+   {
+    "interfaceNo": "",
+    "interfaceName": "里程单位",
+    "interfaceCode": "D00",
+    "fixCode": null,
+    "digit": "7"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "背光等级",
+    "interfaceCode": "D03",
+    "fixCode": null,
+    "digit": "10"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "关机时间",
+    "interfaceCode": "D01",
+    "fixCode": null,
+    "digit": "8"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "光感灵敏度",
+    "interfaceCode": "D02",
+    "fixCode": null,
+    "digit": "9"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "助力档位",
+    "interfaceCode": "D04",
+    "fixCode": null,
+    "digit": "11"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "骑行模式",
+    "interfaceCode": "D05",
+    "fixCode": null,
+    "digit": "12"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "语言",
+    "interfaceCode": "D06",
+    "fixCode": null,
+    "digit": "13"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "距离",
+    "interfaceCode": "D07",
+    "fixCode": null,
+    "digit": "14"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "密码开关",
+    "interfaceCode": "D15",
+    "fixCode": null,
+    "digit": "15"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "原密码",
+    "interfaceCode": "D16",
+    "fixCode": null,
+    "digit": "16;17;18;19"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "轮径",
+    "interfaceCode": "D30",
+    "fixCode": null,
+    "digit": "7;8"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "限速度",
+    "interfaceCode": "D32",
+    "fixCode": null,
+    "digit": "9;10"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "电量类型",
+    "interfaceCode": "D34",
+    "fixCode": null,
+    "digit": "59"
+   }
+  ],
+  "interfaceNo": "",
+  "interfaceName": "canads",
+  "interfaceCode": "F3",
+  "fixCode": null,
+  "digit": "3"
+ },
+ {
+  "interfaceNo": "0111F30200",
+  "interfaceName": "can里程切换",
+  "interfaceCode": "skeepli",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F30203",
+  "interfaceName": "can背光等级",
+  "interfaceCode": "canlight",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F30202",
+  "interfaceName": "can光感",
+  "interfaceCode": "guanggan",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F30204",
+  "interfaceName": "can助力档位",
+  "interfaceCode": "canzhuli",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F30205",
+  "interfaceName": "can骑行模式",
+  "interfaceCode": "canqixing",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F30206",
+  "interfaceName": "can语言设置",
+  "interfaceCode": "msgsend",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F30207",
+  "interfaceName": "can距离",
+  "interfaceCode": "juli",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F30201",
+  "interfaceName": "can开关机时间",
+  "interfaceCode": "octime",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0911F30208",
+  "interfaceName": "密码设置",
+  "interfaceCode": "canpwd",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F3013005",
+  "interfaceName": "获取八方数据2",
+  "interfaceCode": "caninfo",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0211F30230",
+  "interfaceName": "can轮径",
+  "interfaceCode": "canlun",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0211F30232",
+  "interfaceName": "can限速",
+  "interfaceCode": "xianspeed",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F30234",
+  "interfaceName": "can电量显示",
+  "interfaceCode": "dianliang",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F3031101",
+  "interfaceName": "can出厂",
+  "interfaceCode": "canhuifu",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F3023501",
+  "interfaceName": "DOD清除",
+  "interfaceCode": "dodqc",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F3023601",
+  "interfaceName": "Trip清除",
+  "interfaceCode": "tripqc",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F20201",
+  "interfaceName": "uart语言设置",
+  "interfaceCode": "uartsendmsg",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111F1010401",
+  "interfaceName": "获取语言列表",
+  "interfaceCode": "langlist",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0411100246",
+  "interfaceName": "时间传输",
+  "interfaceCode": "timeSend",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A3010030",
+  "interfaceName": "控制器版本",
+  "interfaceCode": "contorlCode",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A4010030",
+  "interfaceName": "主电池",
+  "interfaceCode": "zpower",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111B4010030",
+  "interfaceName": "副电池",
+  "interfaceCode": "fpowercode",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "children": [
+   {
+    "interfaceNo": "",
+    "interfaceName": "前进",
+    "interfaceCode": "01",
+    "fixCode": null,
+    "digit": "1,63,64,19,20,17,18,16,65,32,41,42,21,30,31,43,44,61,62,45,46,5"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "左转",
+    "interfaceCode": "02",
+    "fixCode": null,
+    "digit": "33,22,47,48,6"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "右转",
+    "interfaceCode": "03",
+    "fixCode": null,
+    "digit": "34,23,49,50,7"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "左前",
+    "interfaceCode": "04",
+    "fixCode": null,
+    "digit": "35,37,24,26,51,52,8,10"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "右前",
+    "interfaceCode": "05",
+    "fixCode": null,
+    "digit": "36,27,25,27,53,54,9,11"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "左后",
+    "interfaceCode": "06",
+    "fixCode": null,
+    "digit": "39,28,55,56,12"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "右后",
+    "interfaceCode": "07",
+    "fixCode": null,
+    "digit": "40,29,57,58,13"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "左掉头",
+    "interfaceCode": "08",
+    "fixCode": null,
+    "digit": "14,60"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "右掉头",
+    "interfaceCode": "09",
+    "fixCode": null,
+    "digit": "15,59"
+   },
+   {
+    "interfaceNo": "",
+    "interfaceName": "到达终点",
+    "interfaceCode": "0a",
+    "fixCode": null,
+    "digit": "2,3,4"
+   }
+  ],
+  "interfaceNo": "1211F10300",
+  "interfaceName": "新导航内容",
+  "interfaceCode": "newadress",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A9010060",
+  "interfaceName": "NFC",
+  "interfaceCode": "NFC",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A9020101",
+  "interfaceName": "绑卡",
+  "interfaceCode": "entercard",
+  "fixCode": null,
+  "digit": "6"
+ },
+ {
+  "interfaceNo": "0111A9020100",
+  "interfaceName": "退出绑卡",
+  "interfaceCode": "outCard",
+  "fixCode": null,
+  "digit": "6"
+ }
+]
