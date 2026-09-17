@@ -16,7 +16,9 @@ export default defineConfig({
         name: "E-bike Dashboard",
         short_name: "E-bike Dashboard",
         description: "E-bike Dashboard",
-        theme_color: "#ffffff",
+        theme_color: "#4fb8d6",
+        background_color: "#0a0d0f",
+        display: "standalone",
         icons: [
           {
             src: "pwa-64x64.png",
