@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "pwa-assets-generator --preset minimal-2023 ./public/favicon.svg && vite",
-    "build": "pwa-assets-generator --preset minimal-2023 ./public/favicon.svg && vite build",
+    "build": "pwa-assets-generator --preset minimal-2023 ./public/favicon.svg && vite build --base=/ebike-dashboard/",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
