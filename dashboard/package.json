@@ -1,0 +1,25 @@
+{
+  "name": "dashboard",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/web-bluetooth": "^0.0.21",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^29.1.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^4.1.11"
+  }
+}

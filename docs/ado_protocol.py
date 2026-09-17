@@ -59,7 +59,51 @@ def parse(frame: bytes) -> dict:
 
 def read(dst: int, register: int, count: int) -> bytes:
     """§2 read: SUB is the first register, DATA[0] the number of bytes wanted.
-    The reply is CMD_READ_REPLY with SUB echoed and LEN == count."""
+
+    The reply is CMD_READ_REPLY with SUB echoed. On the settings nodes (0xF2, 0xF3) LEN
+    equals count exactly. On the device-info tables (0xA3, 0xA4, 0xA5, 0xA7, spec §14) it
+    doesn't: LEN comes back rounded up, by an amount that varies with offset, and a request
+    that doesn't start on a field the firmware recognises gets no reply at all -- see
+    reverse-engineering.md §10.
+
+    SAFETY: on dst=0xA3 (motor controller), never send a request touching register 192,
+    register 198, or 200-207 -- and this is not one contiguous window: register 196, sitting
+    between two of these, is confirmed safe, so check each individually rather than assuming
+    a range. Established in stages, getting narrower as well as wider each time a request
+    believed safe turned out not to be: register=200 exactly crashed the controller;
+    register=192, count=24 (a range reaching into 200-201 without starting there) crashed it
+    too, at the time attributed to that overlap; register=202, count=35 -- chosen to start
+    clear of the then-current boundary -- crashed it a third time, and manual testing
+    afterwards found registers up to 206 crash as well; register=192, count=2 -- far too
+    short to reach 200-201 -- crashed it a fourth time, ruling out byte-range overlap as the
+    mechanism; register=196, count=2 answered cleanly while register=198, immediately next to
+    it, crashed the controller, ruling out one contiguous hazardous block as well. register=194
+    has no data point either way -- not tested, not assumed safe. register=168, count=24
+    (ending at 191) is fine; register=208 has been requested and answered with silence, not a
+    crash, so it's confirmed safe to request (though not always answered). Given this picture
+    has changed shape more than once, do not treat any of the above as final -- see
+    reverse-engineering.md §10, seventh, eighth, tenth and twelfth runs and the manual
+    follow-up after the twelfth. Two further incidents show count alone can also trigger it,
+    unrelated to any of this: count=237 at register=0, and count=128 at register=160. Treat
+    every register/count combination not already in reverse-engineering.md §10's run history
+    as untested, not as safe by resemblance to one that was.
+
+    SAFETY: on dst=0xA5 (display/meter), never send a request touching register 164 --
+    "current assist level" on this table, the same field name as 0xA3's own dangerous
+    register 192, confirmed dangerous on its own with a 2-byte request (reverse-engineering.md
+    §10, thirteenth run). Unlike 0xA3, this looks like an isolated single field rather than
+    part of a wider block: registers 163 and 166, immediately either side, are both confirmed
+    safe. Whether this is the same underlying mechanism as 0xA3's hazard, or coincidence, is
+    unresolved. dst=0xA4 and dst=0xA7 have not crashed at all so far, but the same class of
+    hazard has not been ruled out on either.
+
+    Every crash on record so far, regardless of which dst was targeted, has produced the
+    identical symptom: the bike's status broadcasts stop and the BLE connection drops a couple
+    of seconds later. This is consistent with a fault on the shared internal bus that locks up
+    regardless of which node's read exposed it, not with a bug specific to whichever node was
+    being read -- "crashes the controller" elsewhere in this file predates that distinction
+    and should be read as "the whole bike goes unresponsive," not a claim about which physical
+    part fails."""
     return build(dst, CMD_READ, register, bytes([count]))
 
 

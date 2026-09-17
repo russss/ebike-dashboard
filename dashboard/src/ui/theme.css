@@ -1,0 +1,78 @@
+/*
+  Instrument-panel palette: functional status colours (green/amber/red) tied to real bike
+  state, one reserved accent for "this is live," everything else quiet. No decorative
+  gradients or shadows — dividers and spacing carry the grouping, the way a physical
+  instrument cluster does. Custom properties inherit through shadow DOM, so components
+  reference these directly rather than repeating literals.
+*/
+:root {
+  color-scheme: dark;
+
+  --bg: #0a0d0f;
+  --surface: #10161a;
+  --hairline: #223034;
+
+  --fg: #e8f0ee;
+  --fg-dim: #7c9791;
+  --fg-faint: #4a615d;
+
+  --nominal: #5fd68c;
+  --caution: #e8a33d;
+  --fault: #e6553f;
+  --accent: #4fb8d6;
+
+  --nominal-bg: rgb(95 214 140 / 12%);
+  --caution-bg: rgb(232 163 61 / 14%);
+  --fault-bg: rgb(230 85 63 / 16%);
+
+  --font-label: -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-numeral: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 20px;
+  --space-5: 32px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100svh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-label);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+ado-app {
+  display: block;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100svh;
+}
+
+/* Numeric readouts everywhere use this so digits don't jitter as values update. */
+.tabular {
+  font-family: var(--font-numeral);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
